@@ -1,244 +1,157 @@
 # ERDDAP MCP Server
 
-A Model Context Protocol (MCP) server that provides tools for searching and accessing ERDDAP (Environmental Research Division's Data Access Program) oceanographic datasets. This server enables AI assistants to interact with ERDDAP servers to discover and retrieve scientific data.
+Access oceanographic and environmental data from ERDDAP servers worldwide directly through Claude, ChatGPT, or any MCP-compatible AI assistant.
 
-## Overview
+## What is this?
 
-ERDDAP is a data server that gives you a simple, consistent way to download subsets of scientific datasets in common file formats and make graphs and maps. This MCP server acts as a bridge between AI assistants and ERDDAP servers, allowing them to:
+This MCP (Model Context Protocol) server provides seamless access to ERDDAP (Environmental Research Division's Data Access Program) servers, allowing AI assistants to search, discover, and retrieve scientific datasets. ERDDAP is a data server that gives you a simple, consistent way to download subsets of scientific datasets in common file formats and make graphs and maps.
 
-- Search for datasets using keywords
-- Retrieve detailed metadata about specific datasets
-- Access information about variables, time ranges, and geographic coverage
+## Credits
 
-## Features
+- **ERDDAP** was developed by Bob Simons at NOAA's Environmental Research Division. Learn more at the [ERDDAP website](https://coastwatch.pfeg.noaa.gov/erddap/information.html).
+- **erddapy** is the official Python client for ERDDAP, developed by [Filipe Fernandes](https://github.com/ocefpaf) and the IOOS community. Visit the [erddapy documentation](https://ioos.github.io/erddapy/).
 
-- **Dataset Search**: Search ERDDAP catalogs using keywords
-- **Dataset Information**: Get comprehensive metadata about specific datasets
-- **Async Operations**: Built with asyncio for efficient concurrent operations
-- **Error Handling**: Robust error handling with timeouts and descriptive error messages
-- **Debug Logging**: Comprehensive debug output for troubleshooting
+## Quick Start
 
-## Requirements
-
-- Python 3.7+
-- `mcp` - Model Context Protocol SDK
-- `aiohttp` - Asynchronous HTTP client library
-
-## Installation
+### Installation
 
 1. Clone this repository:
 ```bash
-git clone <repository-url>
-cd erddap_mcp
+git clone https://github.com/yourusername/erddap2mcp.git
+cd erddap2mcp
 ```
 
 2. Install dependencies:
 ```bash
-pip install mcp aiohttp
+pip install erddapy mcp pandas
 ```
 
-3. Make the server executable:
-```bash
-chmod +x erddap_mcp_server.py
+That's it! No additional configuration needed.
+
+### Integration with AI Assistants
+
+#### Claude Desktop
+
+Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+
+```json
+{
+  "mcpServers": {
+    "erddap": {
+      "command": "python",
+      "args": ["/path/to/erddap2mcp/erddapy_mcp_server.py"]
+    }
+  }
+}
 ```
 
-## Usage
+#### Cline (VS Code Extension)
 
-### Running the Server
+Add to your VS Code settings.json:
 
-Run the server directly:
-```bash
-python erddap_mcp_server.py
+```json
+{
+  "cline.mcpServers": {
+    "erddap": {
+      "command": "python",
+      "args": ["/path/to/erddap2mcp/erddapy_mcp_server.py"]
+    }
+  }
+}
 ```
 
-Or as an executable:
-```bash
-./erddap_mcp_server.py
-```
+#### Other MCP Clients
 
-The server communicates via stdio (standard input/output) using the MCP protocol.
+For any MCP-compatible client, use:
+- Command: `python /path/to/erddap2mcp/erddapy_mcp_server.py`
+- Protocol: stdio
 
-### Connecting to an MCP Client
+## Usage Examples
 
-This server is designed to be used with MCP-compatible AI assistants. Configure your MCP client to connect to this server using stdio transport.
+### List Available ERDDAP Servers
+
+**You:** Show me available ERDDAP servers
+
+**Assistant:** I'll use the list_servers tool to show you the available ERDDAP servers.
+
+Here are some well-known ERDDAP servers you can access:
+
+- **NOAA CoastWatch** (https://coastwatch.pfeg.noaa.gov/erddap) - Provides satellite and in-situ oceanographic data from NOAA
+- **IOOS ERDDAP** (https://erddap.ioos.us/erddap) - The Integrated Ocean Observing System's data server
+- **Marine Institute Ireland** (https://erddap.marine.ie/erddap) - Irish marine and oceanographic data
+- **ONC ERDDAP** (https://data.oceannetworks.ca/erddap) - Ocean Networks Canada's data server
+- **GCOOS ERDDAP** (https://gcoos5.geos.tamu.edu/erddap) - Gulf of Mexico Coastal Ocean Observing System
+- **EMODnet Physics** (https://erddap.emodnet-physics.eu/erddap) - European Marine Observation and Data Network
+
+### Search for Datasets
+
+**You:** Search the GCOOS ERDDAP server for datasets created by Bob Currier
+
+**Assistant:** I'll search the GCOOS ERDDAP server for datasets created by Bob Currier.
+
+I found 26 datasets on the GCOOS ERDDAP server that are associated with Bob Currier. Here are the first 10:
+
+- Stommel-20200813T1200
+- usf-sam-20190527T1200
+- usf-sam-20210331T0000
+- usf-sam-20210512T0000
+- Reveille-20180627T1500
+- Sverdrup-20180509T1742
+- Sverdrup-20190926T0000
+- Sverdrup-20200925T1200
+- mote-dora-20210113T1200
+- mote-dora-20210318T1200
+
+These appear to be glider datasets based on the naming convention.
+
+### Analyze Data
+
+**You:** Get the average sea water temperature for the dataset mote-dora-20210318T1200
+
+**Assistant:** Based on the data from the mote-dora-20210318T1200 dataset, the average sea water temperature is **21.09°C**.
+
+The dataset contains 30,405 total measurements, with 7,197 valid temperature readings. The temperature ranges from a minimum of 20.51°C to a maximum of 21.58°C, with a standard deviation of 0.26°C, indicating relatively stable temperature conditions during this glider deployment.
 
 ## Available Tools
 
-### 1. test_tool
-A simple test tool for verifying the server connection.
+| Tool | Description | Example Use |
+|------|-------------|-------------|
+| `list_servers` | Show well-known ERDDAP servers | "Show me available ERDDAP servers" |
+| `search_datasets` | Search for datasets by keyword | "Find temperature datasets on IOOS ERDDAP" |
+| `get_dataset_info` | Get detailed metadata about a dataset | "Tell me about dataset jplMURSST41" |
+| `get_dataset_variables` | List all variables in a dataset | "What variables are in this dataset?" |
+| `get_var_by_attr` | Find variables by attributes | "Find variables with units of meters" |
+| `get_search_url` | Generate a search URL | "Create a search URL for salinity data" |
+| `get_info_url` | Generate an info URL | "Generate the metadata URL for this dataset" |
+| `get_download_url` | Generate a download URL | "Create a download URL with these constraints" |
+| `to_pandas` | Download and preview data | "Show me the temperature data from January 2024" |
+| `download_file` | Prepare file download | "Download this data as NetCDF" |
 
-**Parameters:**
-- `message` (string, required): Test message to echo back
+## Tips for Best Results
 
-**Example:**
-```json
-{
-  "name": "test_tool",
-  "arguments": {
-    "message": "Hello, ERDDAP!"
-  }
-}
-```
+1. **Start with search**: Use `search_datasets` to find relevant datasets
+2. **Check metadata**: Use `get_dataset_info` to understand what's available
+3. **Use constraints**: Limit data requests with time/space constraints to avoid timeouts
+4. **Specify protocol**: Use "griddap" for gridded data (satellite/model) and "tabledap" for tabular data (buoys/stations)
 
-### 2. search_datasets
-Search ERDDAP datasets using keywords.
+## Common Use Cases
 
-**Parameters:**
-- `query` (string, required): Search keywords
-- `server_url` (string, optional): ERDDAP server URL (defaults to GCOOS server)
-
-**Example:**
-```json
-{
-  "name": "search_datasets",
-  "arguments": {
-    "query": "temperature gulf of mexico",
-    "server_url": "https://gcoos5.geos.tamu.edu/erddap/"
-  }
-}
-```
-
-**Returns:** Formatted list of matching datasets with IDs, titles, and summaries.
-
-### 3. get_dataset_info
-Get detailed information about a specific dataset.
-
-**Parameters:**
-- `dataset_id` (string, required): The ERDDAP dataset ID
-- `server_url` (string, optional): ERDDAP server URL (defaults to GCOOS server)
-
-**Example:**
-```json
-{
-  "name": "get_dataset_info",
-  "arguments": {
-    "dataset_id": "tabs_b_salinity"
-  }
-}
-```
-
-**Returns:** Comprehensive dataset information including:
-- Title and summary
-- Institution and creator information
-- Time coverage (start/end dates)
-- Geographic coverage (bounding box)
-- Available variables with units
-- Platform and instrument details
-
-## Code Structure
-
-### Main Components
-
-1. **Debug Printing**
-   ```python
-   def debug_print(msg):
-   ```
-   Outputs debug messages to stderr for monitoring in MCP client logs.
-
-2. **ERDDAP Search Function**
-   ```python
-   async def search_erddap_datasets(query: str, server_url: str) -> str:
-   ```
-   - Constructs ERDDAP search API URL
-   - Sends GET request with search parameters
-   - Handles timeouts and errors
-   - Returns parsed search results
-
-3. **Search Results Parser**
-   ```python
-   def parse_erddap_search_results(csv_content: str, query: str) -> str:
-   ```
-   - Parses CSV response from ERDDAP search
-   - Extracts dataset IDs, titles, and summaries
-   - Formats results for readable output
-
-4. **Dataset Info Function**
-   ```python
-   async def get_dataset_info(dataset_id: str, server_url: str) -> str:
-   ```
-   - Retrieves detailed dataset metadata
-   - Handles API requests and errors
-   - Returns formatted dataset information
-
-5. **Dataset Info Parser**
-   ```python
-   def parse_dataset_info_NEW(csv_content: str, dataset_id: str) -> str:
-   ```
-   - Parses complex CSV structure with dataset attributes
-   - Extracts global attributes and variable information
-   - Formats data with emojis and markdown for readability
-
-6. **MCP Server Setup**
-   - Creates server instance with name "erddap-dataset-server"
-   - Registers available tools with schemas
-   - Handles tool invocations
-   - Manages stdio communication
-
-### Error Handling
-
-The server includes comprehensive error handling:
-- **Timeout errors**: 30-second timeout for all HTTP requests
-- **HTTP errors**: Handles non-200 status codes
-- **Connection errors**: Catches and reports connection failures
-- **Parsing errors**: Handles malformed CSV responses
-- **MCP errors**: Fallback initialization for different MCP versions
-
-## Configuration
-
-Default settings:
-- **Server Name**: `erddap-dataset-server`
-- **Server Version**: `2.0.0`
-- **Default ERDDAP Server**: `https://gcoos5.geos.tamu.edu/erddap/`
-- **Search Results Limit**: 10 items per page
-- **HTTP Timeout**: 30 seconds
-
-## ERDDAP Servers
-
-This server can work with any ERDDAP installation. Some popular public ERDDAP servers:
-
-- **GCOOS** (default): https://gcoos5.geos.tamu.edu/erddap/
-- **NOAA CoastWatch**: https://coastwatch.pfeg.noaa.gov/erddap/
-- **IOOS**: https://erddap.ioos.us/erddap/
-- **Marine Institute Ireland**: https://erddap.marine.ie/erddap/
-
-## Development
-
-### Debug Mode
-
-Debug messages are automatically output to stderr and will appear in MCP client logs. Look for lines prefixed with "DEBUG:".
-
-### Extending the Server
-
-To add new ERDDAP tools:
-
-1. Create an async function for the ERDDAP operation
-2. Add a parser function if needed for response processing
-3. Register the tool in `handle_list_tools()`
-4. Add the implementation in `handle_call_tool()`
-
-### Testing
-
-Test the server by running it and sending MCP protocol messages via stdin, or use an MCP-compatible client.
+- **Climate Research**: Access historical temperature, salinity, and current data
+- **Marine Biology**: Find chlorophyll concentrations and ocean color data
+- **Coastal Management**: Monitor sea level, wave heights, and coastal conditions
+- **Fisheries**: Access environmental data for fisheries management
+- **Education**: Explore real oceanographic data for teaching and learning
 
 ## Troubleshooting
 
-1. **Server won't start**: Check Python version (3.7+) and ensure dependencies are installed
-2. **Connection errors**: Verify the ERDDAP server URL is accessible
-3. **No results**: Try different search terms or check the ERDDAP server's data catalog
-4. **Timeout errors**: Some ERDDAP servers may be slow; consider implementing retry logic
-
-## License
-
-[Add license information here]
+- **Timeouts**: Reduce the spatial/temporal extent of your data request
+- **Protocol errors**: Make sure to specify the correct protocol (tabledap vs griddap)
+- **Server availability**: Some ERDDAP servers may be temporarily unavailable
 
 ## Contributing
 
-[Add contributing guidelines here]
+Contributions are welcome! Please feel free to submit issues or pull requests.
 
-## Acknowledgments
+## License
 
-- ERDDAP is developed by NOAA's Environmental Research Division
-- MCP (Model Context Protocol) is developed by Anthropic
-- Default server provided by GCOOS (Gulf of Mexico Coastal Ocean Observing System)# erddap2mcp
-# erddap2mcp
-# erddap2mcp
+This project is open source and available under the MIT License.

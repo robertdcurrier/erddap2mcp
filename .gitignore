@@ -7,25 +7,12 @@ __pycache__/
 env/
 venv/
 ENV/
-.venv
-pip-log.txt
-pip-delete-this-directory.txt
-.pytest_cache/
-*.egg-info/
-dist/
-build/
-
-# Virtual environments
-bin/
-include/
-lib/
-lib64/
-share/
-pyvenv.cfg
+env.bak/
+venv.bak/
 
 # IDE
-.vscode/
 .idea/
+.vscode/
 *.swp
 *.swo
 *~
@@ -34,29 +21,12 @@ pyvenv.cfg
 .DS_Store
 Thumbs.db
 
-# MCP specific
+# Project specific
 *.log
-debug.log
+*.csv
+*.nc
+test_*.py
+!test_mcp_integration.py
 
-# Environment variables
-.env
-.env.local
-.env.*.local
-
-# Coverage reports
-htmlcov/
-.coverage
-.coverage.*
-coverage.xml
-*.cover
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# pyenv
-.python-version
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
+# Deprecated files
+deprecated/

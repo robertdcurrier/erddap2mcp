@@ -8,35 +8,51 @@ This is an MCP (Model Context Protocol) server that provides tools for searching
 
 ## Architecture
 
-The entire server is implemented in a single file: `erddap_mcp_server.py`
+The main server is implemented in: `erddapy_mcp_server.py`
 
 Key components:
 - **MCP Server Setup**: Uses the `mcp` library to create a stdio-based server
-- **ERDDAP Integration**: Makes HTTP requests to ERDDAP servers using `aiohttp`
-- **CSV Parsing**: Parses ERDDAP's CSV responses to extract dataset information
-- **Tool Handlers**: Implements three MCP tools for dataset operations
+- **ERDDAP Integration**: Uses the official `erddapy` Python client library
+- **Data Processing**: Handles pandas DataFrames for data analysis and preview
+- **Tool Handlers**: Implements 10+ MCP tools for comprehensive ERDDAP access
 
 ## Development Commands
 
-Since there are no package management files, dependencies must be installed manually:
-
+Install dependencies:
 ```bash
 # Install required dependencies
-pip install mcp aiohttp
+pip install erddapy mcp pandas
 
 # Run the server
-python erddap_mcp_server.py
-
-# Make the file executable (if needed)
-chmod +x erddap_mcp_server.py
-./erddap_mcp_server.py
+python erddapy_mcp_server.py
 ```
 
 ## Available Tools
 
-1. **test_tool**: Simple test tool for verification
+### Discovery Tools
+1. **list_servers**: Show well-known ERDDAP servers
 2. **search_datasets**: Search ERDDAP datasets by query string
 3. **get_dataset_info**: Get detailed metadata for a specific dataset ID
+4. **get_dataset_variables**: List all variables and their attributes
+5. **get_var_by_attr**: Find variables by specific attributes
+
+### URL Generation Tools
+6. **get_search_url**: Generate search URLs
+7. **get_info_url**: Generate dataset info URLs
+8. **get_download_url**: Generate download URLs with constraints
+
+### Data Access Tools
+9. **to_pandas**: Download data and return as pandas DataFrame preview
+10. **download_file**: Prepare downloads in various formats (CSV, NetCDF, JSON, etc.)
+
+## Important Parameters
+
+Most tools accept these common parameters:
+- `server_url`: ERDDAP server URL (defaults to NOAA CoastWatch)
+- `protocol`: Either "tabledap" (tabular data) or "griddap" (gridded data)
+- `dataset_id`: The dataset identifier
+- `variables`: List of variables to retrieve
+- `constraints`: Dictionary of constraints (e.g., time/space bounds)
 
 ## Debugging
 
@@ -44,13 +60,16 @@ The server includes debug output that goes to stderr. Debug messages are prefixe
 
 ## Default Configuration
 
-- Default ERDDAP server: `https://gcoos5.geos.tamu.edu/erddap/`
-- Server name: `erddap-dataset-server`
+- Default ERDDAP server: `https://coastwatch.pfeg.noaa.gov/erddap`
+- Server name: `erddapy-mcp-server`
 - Communication: stdio (standard input/output)
+- Protocol default: `tabledap` (use `griddap` for gridded datasets)
 
 ## Important Implementation Details
 
-- All async operations use `aiohttp` with 30-second timeouts
-- CSV parsing handles ERDDAP's specific format with proper quote handling
-- The server includes fallback initialization for different MCP library versions
-- Error handling includes specific timeout and connection error messages
+- Uses erddapy library for all ERDDAP interactions
+- Maintains ERDDAP instance cache for performance
+- Handles both tabledap and griddap protocols
+- Includes griddap_initialize() for proper gridded data handling
+- Error handling includes timeouts and meaningful error messages
+- Data previews include summary statistics for quick analysis

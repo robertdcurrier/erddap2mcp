@@ -17,13 +17,13 @@ This MCP (Model Context Protocol) server provides seamless access to ERDDAP (Env
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/yourusername/erddap2mcp.git
+git clone https://github.com/robertdcurrier/erddap2mcp.git
 cd erddap2mcp
 ```
 
 2. Install dependencies:
 ```bash
-pip install erddapy mcp pandas
+pip install -r requirements.txt
 ```
 
 That's it! No additional configuration needed.

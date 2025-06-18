@@ -444,6 +444,7 @@ async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent
                 ("ONC ERDDAP", "https://data.oceannetworks.ca/erddap"),
                 ("GCOOS ERDDAP", "https://gcoos5.geos.tamu.edu/erddap"),
                 ("EMODnet Physics", "https://erddap.emodnet-physics.eu/erddap"),
+                ("IOOS GDAC", "https://gliders.ioos.us/erddap/"),
             ]
             
             result = "**Well-known ERDDAP servers:**\n\n"

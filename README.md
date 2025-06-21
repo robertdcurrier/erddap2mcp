@@ -127,57 +127,6 @@ The dataset contains 30,405 total measurements, with 7,197 valid temperature rea
 | `to_pandas` | Download and preview data | "Show me the temperature data from January 2024" |
 | `download_file` | Prepare file download | "Download this data as NetCDF" |
 
-## Standalone NetCDF Download Tool
-
-In addition to the MCP server, this repository includes `erddap_download_nc.py`, a standalone command-line tool for efficiently downloading NetCDF files from ERDDAP servers. This tool is particularly useful for downloading large collections of files from datasets you've discovered using the MCP server.
-
-### Features
-
-- Downloads NetCDF files directly from ERDDAP's files endpoint
-- Tracks previously downloaded files to avoid re-downloads
-- Supports file pattern matching (e.g., `*24hr*.nc`)
-- Uses HTTP compression for 3-10x faster downloads
-- No dependency on erddapy library
-- Colorful progress indicators and logging
-
-### Usage
-
-```bash
-# Download all NC files from a dataset
-python erddap_download_nc.py dataset_id
-
-# Download to specific directory
-python erddap_download_nc.py dataset_id -o /path/to/data
-
-# Download only files matching a pattern
-python erddap_download_nc.py dataset_id --pattern "*24hr*.nc"
-
-# Use a different ERDDAP server
-python erddap_download_nc.py dataset_id --server https://coastwatch.pfeg.noaa.gov/erddap
-
-# Force re-download of all files
-python erddap_download_nc.py dataset_id --force
-
-# Enable verbose logging
-python erddap_download_nc.py dataset_id -v
-```
-
-### Example Workflow
-
-1. Use the MCP server through your AI assistant to discover datasets:
-   ```
-   You: Search IOOS GDAC for glider datasets from Rutgers
-   Assistant: I found dataset ru38-20250414T1500...
-   ```
-
-2. Use the standalone tool to download the data:
-   ```bash
-   python erddap_download_nc.py ru38-20250414T1500 -o ./glider_data
-   ```
-
-The tool will download all NetCDF files, show progress, and skip any files already downloaded in previous runs.
-
-**Note**: In the future, this download functionality will be integrated directly into the MCP server, allowing you to request downloads through the chat interface. For now, it's available as a standalone tool for batch downloads.
 
 ## Tips for Best Results
 

@@ -15,6 +15,8 @@ This MCP (Model Context Protocol) server provides seamless access to ERDDAP (Env
 
 ### Installation
 
+#### For macOS/Linux Users
+
 1. Clone this repository:
 ```bash
 git clone https://github.com/robertdcurrier/erddap2mcp.git
@@ -26,13 +28,41 @@ cd erddap2mcp
 pip install -r requirements.txt
 ```
 
-That's it! No additional configuration needed.
+#### For Windows Users
+
+1. **Install Python** (if not already installed):
+   - Download Python from [python.org](https://www.python.org/downloads/)
+   - During installation, make sure to check "Add Python to PATH"
+
+2. **Install Git** (if not already installed):
+   - Download Git from [git-scm.com](https://git-scm.com/download/win)
+   - Use default installation options
+
+3. **Clone the repository**:
+   - Open Command Prompt (cmd) or PowerShell
+   - Navigate to where you want to install (e.g., `cd C:\Users\YourName\Documents`)
+   - Run:
+   ```cmd
+   git clone https://github.com/robertdcurrier/erddap2mcp.git
+   cd erddap2mcp
+   ```
+
+4. **Install dependencies**:
+   ```cmd
+   pip install -r requirements.txt
+   ```
+
+5. **Note the full path** to the erddapy_mcp_server.py file:
+   - In Command Prompt, run: `cd` to see current directory
+   - Your path will be something like: `C:\Users\YourName\Documents\erddap2mcp\erddapy_mcp_server.py`
+   - You'll need this path for the AI assistant configuration
 
 ### Integration with AI Assistants
 
 #### Claude Desktop
 
-Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+**macOS:**
+Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 
 ```json
 {
@@ -45,20 +75,36 @@ Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/
 }
 ```
 
-#### Cline (VS Code Extension)
-
-Add to your VS Code settings.json:
+**Windows:**
+Add to your Claude Desktop configuration (`%APPDATA%\Claude\claude_desktop_config.json`):
 
 ```json
 {
-  "cline.mcpServers": {
+  "mcpServers": {
     "erddap": {
       "command": "python",
-      "args": ["/path/to/erddap2mcp/erddapy_mcp_server.py"]
+      "args": ["C:\\Users\\YourName\\Documents\\erddap2mcp\\erddapy_mcp_server.py"]
     }
   }
 }
 ```
+
+Note: Use double backslashes (`\\`) in the Windows path.
+
+#### ChatGPT
+
+To use with ChatGPT, you'll need to use an MCP bridge service since ChatGPT doesn't natively support MCP servers yet. Options include:
+
+1. **MCP Bridge** (recommended):
+   - Visit [mcp-bridge.com](https://mcp-bridge.com) (community-maintained)
+   - Follow their setup instructions to connect MCP servers to ChatGPT
+   - Add the ERDDAP MCP server using the path to `erddapy_mcp_server.py`
+
+2. **Local API Bridge**:
+   - Run a local API that ChatGPT can call via Actions
+   - Several community solutions exist on GitHub
+
+Note: Direct MCP support in ChatGPT is expected in future updates.
 
 #### Other MCP Clients
 

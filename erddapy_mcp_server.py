@@ -443,6 +443,7 @@ async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent
                 ("Marine Institute Ireland", "https://erddap.marine.ie/erddap"),
                 ("ONC ERDDAP", "https://data.oceannetworks.ca/erddap"),
                 ("GCOOS ERDDAP", "https://gcoos5.geos.tamu.edu/erddap"),
+                ("CalOOS ERDDAP", "https://erddap.caloos.org/erddap"),
                 ("EMODnet Physics", "https://erddap.emodnet-physics.eu/erddap"),
                 ("IOOS GDAC", "https://gliders.ioos.us/erddap/"),
             ]

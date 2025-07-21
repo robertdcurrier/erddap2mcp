@@ -1,165 +1,120 @@
-# ERDDAP MCP Server
+# ERDDAP MCP Servers - Local & Remote
 
-Access oceanographic and environmental data from ERDDAP servers worldwide directly through Claude, ChatGPT, or any MCP-compatible AI assistant.
+Access oceanographic and environmental data from ERDDAP servers worldwide through Claude Desktop via **two complete MCP implementations**: local stdio and remote HTTP.
 
-## What is this?
+## 🌊 Two Servers, All Possibilities
 
-This MCP (Model Context Protocol) server provides seamless access to ERDDAP (Environmental Research Division's Data Access Program) servers, allowing AI assistants to search, discover, and retrieve scientific datasets. ERDDAP is a data server that gives you a simple, consistent way to download subsets of scientific datasets in common file formats and make graphs and maps.
+This repository provides **both local and remote MCP server implementations**:
 
-## Credits
+### 📍 Local MCP Server (`erddapy_mcp_server.py`)
+- **Traditional stdio-based MCP server** for local Claude Desktop use
+- **Full-featured** with 10+ comprehensive ERDDAP tools
+- **Easy setup** via claude_desktop_config.json
+- **No network dependencies** - runs completely locally
 
-- **ERDDAP** was developed by Bob Simons at NOAA's Environmental Research Division. Learn more at the [ERDDAP website](https://coastwatch.pfeg.noaa.gov/erddap/information.html).
-- **erddapy** is the official Python client for ERDDAP, developed by [Filipe Fernandes](https://github.com/ocefpaf) and the IOOS community. Visit the [erddapy documentation](https://ioos.github.io/erddapy/).
+### ☁️ Remote MCP Server (`erddap_remote_mcp_oauth.py`)
+- **HTTP-based MCP server** for cloud deployment
+- **Production-ready** with fly.io deployment configuration
+- **mcp-remote proxy compatible** for Claude Desktop integration
+- **Optimized core tools** for remote performance
+
+## 🚨 CRITICAL: Remote MCP Connection Requirements
+
+**Claude Desktop does NOT support direct remote MCP connections!** You MUST use the `mcp-remote` proxy for remote servers.
+
+### The Secret Architecture:
+```
+Claude Desktop (stdio) ↔ mcp-remote proxy ↔ Remote MCP Server (HTTP)
+```
+
+## What is ERDDAP?
+
+ERDDAP (Environmental Research Division's Data Access Program) is a data server that provides simple, consistent access to scientific datasets in common file formats. These MCP servers make ERDDAP's powerful oceanographic data accessible to AI assistants through natural language queries.
 
 ## Quick Start
 
-### Installation
+### Option 1: Local MCP Server (Recommended for Getting Started)
 
-#### For macOS/Linux Users
-
-1. Clone this repository:
+**1. Install Dependencies:**
 ```bash
-git clone https://github.com/robertdcurrier/erddap2mcp.git
-cd erddap2mcp
+pip install erddapy mcp pandas
 ```
 
-2. Install dependencies:
+**2. Run the Server:**
 ```bash
-pip install -r requirements.txt
+python erddapy_mcp_server.py
 ```
 
-#### For Windows Users
-
-1. **Install Python** (if not already installed):
-   - Download Python from [python.org](https://www.python.org/downloads/)
-   - During installation, make sure to check "Add Python to PATH"
-
-2. **Install Git** (if not already installed):
-   - Download Git from [git-scm.com](https://git-scm.com/download/win)
-   - Use default installation options
-
-3. **Clone the repository**:
-   - Open Command Prompt (cmd) or PowerShell
-   - Navigate to where you want to install (e.g., `cd C:\Users\YourName\Documents`)
-   - Run:
-   ```cmd
-   git clone https://github.com/robertdcurrier/erddap2mcp.git
-   cd erddap2mcp
-   ```
-
-4. **Install dependencies**:
-   ```cmd
-   pip install -r requirements.txt
-   ```
-
-5. **Note the full path** to the erddapy_mcp_server.py file:
-   - In Command Prompt, run: `cd` to see current directory
-   - Your path will be something like: `C:\Users\YourName\Documents\erddap2mcp\erddapy_mcp_server.py`
-   - You'll need this path for the AI assistant configuration
-
-### Integration with AI Assistants
-
-#### Claude Desktop
-
-**macOS:**
-Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+**3. Configure Claude Desktop:**
+Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 
 ```json
 {
   "mcpServers": {
-    "erddap": {
+    "erddap-local": {
       "command": "python",
-      "args": ["/path/to/erddap2mcp/erddapy_mcp_server.py"]
+      "args": ["/Users/rdc/src/mcp/erddap2mcp/erddapy_mcp_server.py"]
     }
   }
 }
 ```
 
-**Windows:**
-Add to your Claude Desktop configuration (`%APPDATA%\Claude\claude_desktop_config.json`):
-
+**Windows Users:** Use `%APPDATA%\Claude\claude_desktop_config.json` and double backslashes in paths:
 ```json
 {
   "mcpServers": {
-    "erddap": {
-      "command": "python",
-      "args": ["C:\\Users\\YourName\\Documents\\erddap2mcp\\erddapy_mcp_server.py"]
+    "erddap-local": {
+      "command": "python", 
+      "args": ["C:\\Users\\YourName\\path\\to\\erddapy_mcp_server.py"]
     }
   }
 }
 ```
 
-Note: Use double backslashes (`\\`) in the Windows path.
+### Option 2: Remote MCP Server (For Cloud Deployment)
 
-#### ChatGPT
+**1. Install Dependencies:**
+```bash
+pip install fastapi uvicorn erddapy pandas
+```
 
-To use with ChatGPT, you'll need to use an MCP bridge service since ChatGPT doesn't natively support MCP servers yet. Options include:
+**2. Run Locally for Testing:**
+```bash
+python erddap_remote_mcp_oauth.py
+# Server runs on http://localhost:8000
+```
 
-1. **MCP Bridge** (recommended):
-   - Visit [mcp-bridge.com](https://mcp-bridge.com) (community-maintained)
-   - Follow their setup instructions to connect MCP servers to ChatGPT
-   - Add the ERDDAP MCP server using the path to `erddapy_mcp_server.py`
+**3. Deploy to fly.io:**
+```bash
+# Install fly CLI
+curl -L https://fly.io/install.sh | sh
+fly auth login
 
-2. **Local API Bridge**:
-   - Run a local API that ChatGPT can call via Actions
-   - Several community solutions exist on GitHub
+# Deploy (uses included fly.toml)
+fly deploy
+# Server will be available at: https://erddap2mcp.fly.dev/
+```
 
-Note: Direct MCP support in ChatGPT is expected in future updates.
+**4. Install mcp-remote proxy:**
+```bash
+npm install -g mcp-remote
+```
 
-#### Other MCP Clients
-
-For any MCP-compatible client, use:
-- Command: `python /path/to/erddap2mcp/erddapy_mcp_server.py`
-- Protocol: stdio
-
-## Usage Examples
-
-### List Available ERDDAP Servers
-
-**You:** Show me available ERDDAP servers
-
-**Assistant:** I'll use the list_servers tool to show you the available ERDDAP servers.
-
-Here are some well-known ERDDAP servers you can access:
-
-- **NOAA CoastWatch** (https://coastwatch.pfeg.noaa.gov/erddap) - Provides satellite and in-situ oceanographic data from NOAA
-- **IOOS ERDDAP** (https://erddap.ioos.us/erddap) - The Integrated Ocean Observing System's data server
-- **Marine Institute Ireland** (https://erddap.marine.ie/erddap) - Irish marine and oceanographic data
-- **ONC ERDDAP** (https://data.oceannetworks.ca/erddap) - Ocean Networks Canada's data server
-- **GCOOS ERDDAP** (https://gcoos5.geos.tamu.edu/erddap) - Gulf of Mexico Coastal Ocean Observing System
-- **EMODnet Physics** (https://erddap.emodnet-physics.eu/erddap) - European Marine Observation and Data Network
-
-### Search for Datasets
-
-**You:** Search the GCOOS ERDDAP server for datasets created by Bob Currier
-
-**Assistant:** I'll search the GCOOS ERDDAP server for datasets created by Bob Currier.
-
-I found 26 datasets on the GCOOS ERDDAP server that are associated with Bob Currier. Here are the first 10:
-
-- Stommel-20200813T1200
-- usf-sam-20190527T1200
-- usf-sam-20210331T0000
-- usf-sam-20210512T0000
-- Reveille-20180627T1500
-- Sverdrup-20180509T1742
-- Sverdrup-20190926T0000
-- Sverdrup-20200925T1200
-- mote-dora-20210113T1200
-- mote-dora-20210318T1200
-
-These appear to be glider datasets based on the naming convention.
-
-### Analyze Data
-
-**You:** Get the average sea water temperature for the dataset mote-dora-20210318T1200
-
-**Assistant:** Based on the data from the mote-dora-20210318T1200 dataset, the average sea water temperature is **21.09°C**.
-
-The dataset contains 30,405 total measurements, with 7,197 valid temperature readings. The temperature ranges from a minimum of 20.51°C to a maximum of 21.58°C, with a standard deviation of 0.26°C, indicating relatively stable temperature conditions during this glider deployment.
+**5. Configure Claude Desktop:**
+```json
+{
+  "mcpServers": {
+    "erddap-remote": {
+      "command": "npx",
+      "args": ["mcp-remote", "https://erddap2mcp.fly.dev/"]
+    }
+  }
+}
+```
 
 ## Available Tools
 
+### Local Server Tools (Full Suite - 10+ Tools)
 | Tool | Description | Example Use |
 |------|-------------|-------------|
 | `list_servers` | Show well-known ERDDAP servers | "Show me available ERDDAP servers" |
@@ -170,34 +125,228 @@ The dataset contains 30,405 total measurements, with 7,197 valid temperature rea
 | `get_search_url` | Generate a search URL | "Create a search URL for salinity data" |
 | `get_info_url` | Generate an info URL | "Generate the metadata URL for this dataset" |
 | `get_download_url` | Generate a download URL | "Create a download URL with these constraints" |
-| `to_pandas` | Download and preview data | "Show me the temperature data from January 2024" |
+| `to_pandas` | Download and preview data | "Show me temperature data from January 2024" |
 | `download_file` | Prepare file download | "Download this data as NetCDF" |
 
+### Remote Server Tools (Optimized Core - 4 Tools)
+| Tool | Description | Example Use |
+|------|-------------|-------------|
+| `list_servers` | Show well-known ERDDAP servers worldwide | "Show me available ERDDAP servers" |
+| `search_datasets` | Search for datasets by keyword | "Find temperature datasets on IOOS ERDDAP" |
+| `get_dataset_info` | Get detailed metadata about a dataset | "Tell me about dataset jplMURSST41" |
+| `to_pandas` | Download and preview data | "Show me temperature data from January 2024" |
+
+## Usage Examples
+
+### List Available ERDDAP Servers
+**You:** "Show me available ERDDAP servers"
+
+**Claude:** Here are some well-known ERDDAP servers you can access:
+
+- **NOAA CoastWatch** (https://coastwatch.pfeg.noaa.gov/erddap) - Satellite and in-situ oceanographic data
+- **IOOS ERDDAP** (https://erddap.ioos.us/erddap) - Integrated Ocean Observing System data
+- **Marine Institute Ireland** (https://erddap.marine.ie/erddap) - Irish marine data
+- **Ocean Networks Canada** (https://data.oceannetworks.ca/erddap) - Canadian ocean data
+- **GCOOS ERDDAP** (https://gcoos5.geos.tamu.edu/erddap) - Gulf of Mexico data
+
+### Search for Datasets
+**You:** "Search for glider datasets on GCOOS ERDDAP"
+
+**Claude:** I found 26 glider datasets on the GCOOS ERDDAP server. Here are some examples:
+
+- **Stommel-20200813T1200**: Ocean glider deployment
+- **usf-sam-20210331T0000**: University of South Florida glider
+- **mote-dora-20210318T1200**: Mote Marine Laboratory glider
+
+These datasets contain oceanographic measurements collected by autonomous underwater gliders.
+
+### Analyze Data
+**You:** "Get information about the dataset mote-dora-20210318T1200"
+
+**Claude:** This dataset contains oceanographic measurements from a Mote Marine Laboratory glider deployment:
+
+**Time Coverage**: March 18, 2021 - April 15, 2021  
+**Variables**: Temperature, salinity, density, dissolved oxygen, chlorophyll  
+**Location**: Eastern Gulf of Mexico coastal waters
+
+## Architecture Comparison
+
+### Local Server
+- **Communication**: stdio (standard input/output)
+- **Deployment**: Runs on your local machine
+- **Tools**: Complete 10+ tool suite
+- **Setup**: Single config file entry
+- **Dependencies**: Python + MCP library
+
+### Remote Server  
+- **Communication**: HTTP with JSON-RPC 2.0
+- **Deployment**: Cloud platforms (fly.io, AWS, etc.)
+- **Tools**: Optimized 4-tool core set
+- **Setup**: Requires mcp-remote proxy
+- **Dependencies**: FastAPI + Docker + HTTPS
+
+## Cloud Deployment (Remote Server)
+
+### fly.io Deployment (Recommended)
+
+The remote server is configured for one-command deployment to fly.io:
+
+```bash
+# Deploy from the erddap2mcp directory
+fly deploy
+```
+
+**fly.toml Configuration:**
+```toml
+app = 'erddap2mcp'
+primary_region = 'mia'
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+```
+
+**Key Features:**
+- ✅ **Automatic HTTPS** - SSL certificates managed automatically
+- ✅ **Auto-scaling** - Machines start/stop based on traffic
+- ✅ **Global CDN** - Fast access worldwide
+- ✅ **Zero-downtime deploys** - Seamless updates
+
+### Container Deployment (Other Platforms)
+```bash
+# Build container
+docker build -t erddap-mcp-server .
+
+# Run locally
+docker run -p 8000:8000 erddap-mcp-server
+
+# Deploy to other platforms:
+# - AWS Lambda (requires HTTPS setup)
+# - Railway/Render (usually provide HTTPS automatically)
+# - Google Cloud Run
+# - Azure Container Instances
+```
+
+## Testing Your Setup
+
+### Test Local Server
+```bash
+# Run the server
+python erddapy_mcp_server.py
+
+# Check Claude Desktop logs for connection success
+```
+
+### Test Remote Server
+```bash
+# Test basic connectivity
+curl http://localhost:8000/
+
+# Test MCP protocol
+curl -X POST http://localhost:8000/ \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}'
+
+# Test with mcp-remote proxy
+npx mcp-remote http://localhost:8000/ --test
+```
+
+## Configuration Examples
+
+### Both Servers Together
+You can run both local and remote servers simultaneously:
+
+```json
+{
+  "mcpServers": {
+    "erddap-local": {
+      "command": "python",
+      "args": ["/Users/rdc/src/mcp/erddap2mcp/erddapy_mcp_server.py"]
+    },
+    "erddap-remote": {
+      "command": "npx", 
+      "args": ["mcp-remote", "https://erddap2mcp.fly.dev/"]
+    }
+  }
+}
+```
+
+This gives you the full local toolset plus cloud accessibility!
+
+## Common Tool Parameters
+
+Both servers accept these parameters:
+- `server_url`: ERDDAP server URL (defaults to NOAA CoastWatch)
+- `protocol`: Either "tabledap" (tabular data) or "griddap" (gridded data)
+- `dataset_id`: The dataset identifier
+- `variables`: List of variables to retrieve
+- `constraints`: Dictionary of constraints (e.g., time/space bounds)
 
 ## Tips for Best Results
 
-1. **Start with search**: Use `search_datasets` to find relevant datasets
-2. **Check metadata**: Use `get_dataset_info` to understand what's available
-3. **Use constraints**: Limit data requests with time/space constraints to avoid timeouts
-4. **Specify protocol**: Use "griddap" for gridded data (satellite/model) and "tabledap" for tabular data (buoys/stations)
+1. **Start with local**: Local server has more tools and easier setup
+2. **Use remote for sharing**: Remote server can be accessed by multiple users
+3. **Check metadata first**: Use `get_dataset_info` before downloading data
+4. **Use constraints**: Limit data requests to avoid timeouts
+5. **Choose correct protocol**: tabledap for tabular, griddap for gridded data
+
+## Troubleshooting
+
+### Local Server Issues
+- **"No such file"**: Check Python path in configuration
+- **"Connection failed"**: Verify server is running
+- **Tool errors**: Check stderr for debug output
+
+### Remote Server Issues  
+- **"No tools available"**: Ensure mcp-remote proxy is installed (`npm install -g mcp-remote`)
+- **"Connection failed"**: Verify server URL is accessible and uses HTTPS
+- **Protocol errors**: Check server logs with `fly logs -a erddap2mcp`
+
+### General ERDDAP Issues
+- **Timeouts**: Reduce spatial/temporal extent of requests
+- **Protocol errors**: Specify correct protocol (tabledap vs griddap)
+- **Server unavailable**: Some ERDDAP servers may be temporarily down
+
+## The Remote MCP Discovery Journey
+
+This remote implementation represents months of debugging the Remote MCP mystery:
+
+### Failed Approaches:
+1. **Direct SSE connections** - Claude Desktop doesn't support this
+2. **Config file remote URLs** - Only works for local stdio servers
+3. **Connector UI attempts** - Also doesn't support direct connections
+
+### The Breakthrough:
+The `mcp-remote` proxy requirement was buried in third-party documentation. This critical piece enables Claude Desktop to talk to remote MCP servers via HTTP.
+
+## Credits
+
+- **ERDDAP** was developed by Bob Simons at NOAA's Environmental Research Division. Learn more at the [ERDDAP website](https://coastwatch.pfeg.noaa.gov/erddap/information.html).
+- **erddapy** is the official Python client for ERDDAP, developed by [Filipe Fernandes](https://github.com/ocefpaf) and the IOOS community. Visit the [erddapy documentation](https://ioos.github.io/erddapy/).
+- **mcp-remote** proxy enables remote MCP connections to Claude Desktop
 
 ## Common Use Cases
 
 - **Climate Research**: Access historical temperature, salinity, and current data
-- **Marine Biology**: Find chlorophyll concentrations and ocean color data
+- **Marine Biology**: Find chlorophyll concentrations and ocean color data  
 - **Coastal Management**: Monitor sea level, wave heights, and coastal conditions
 - **Fisheries**: Access environmental data for fisheries management
 - **Education**: Explore real oceanographic data for teaching and learning
 
-## Troubleshooting
-
-- **Timeouts**: Reduce the spatial/temporal extent of your data request
-- **Protocol errors**: Make sure to specify the correct protocol (tabledap vs griddap)
-- **Server availability**: Some ERDDAP servers may be temporarily unavailable
-
 ## Contributing
 
-Contributions are welcome! Please feel free to submit issues or pull requests.
+Contributions welcome! This project demonstrates how to build both local and remote MCP servers. Key areas for improvement:
+
+- Additional ERDDAP tools and data processing capabilities
+- Enhanced error handling and performance optimization
+- Multi-server load balancing and caching strategies
 
 ## License
 

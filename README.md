@@ -40,12 +40,7 @@ ERDDAP (Environmental Research Division's Data Access Program) is a data server 
 pip install erddapy mcp pandas
 ```
 
-**2. Run the Server:**
-```bash
-python erddapy_mcp_server.py
-```
-
-**3. Configure Claude Desktop:**
+**2. Configure Claude Desktop:**
 Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 
 ```json
@@ -53,7 +48,7 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
   "mcpServers": {
     "erddap-local": {
       "command": "python",
-      "args": ["/Users/rdc/src/mcp/erddap2mcp/erddapy_mcp_server.py"]
+      "args": ["/path/to/erddapy_mcp_server.py"]
     }
   }
 }
@@ -71,36 +66,17 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
 }
 ```
 
-### Option 2: Remote MCP Server (For Cloud Deployment)
+**3. Restart Claude Desktop:**
+After updating the configuration, restart Claude Desktop. The server will start automatically and the ERDDAP tools will be available.
 
-**1. Install Dependencies:**
-```bash
-pip install fastapi uvicorn erddapy pandas
-```
+### Option 2: Remote MCP Server (Access the Cloud Instance)
 
-**2. Run Locally for Testing:**
-```bash
-python erddap_remote_mcp_oauth.py
-# Server runs on http://localhost:8000
-```
-
-**3. Deploy to fly.io:**
-```bash
-# Install fly CLI
-curl -L https://fly.io/install.sh | sh
-fly auth login
-
-# Deploy (uses included fly.toml)
-fly deploy
-# Server will be available at: https://erddap2mcp.fly.dev/
-```
-
-**4. Install mcp-remote proxy:**
+**1. Install mcp-remote proxy:**
 ```bash
 npm install -g mcp-remote
 ```
 
-**5. Configure Claude Desktop:**
+**2. Configure Claude Desktop:**
 ```json
 {
   "mcpServers": {
@@ -111,6 +87,9 @@ npm install -g mcp-remote
   }
 }
 ```
+
+**3. Restart Claude Desktop:**
+The remote server will be accessible through the mcp-remote proxy.
 
 ## Available Tools
 
@@ -171,7 +150,9 @@ These datasets contain oceanographic measurements collected by autonomous underw
 - **Setup**: Requires mcp-remote proxy
 - **Dependencies**: FastAPI + Docker + HTTPS
 
-## Cloud Deployment (Remote Server)
+## For Developers: Cloud Deployment
+
+*This section is for developers who want to deploy their own instance of the remote server.*
 
 ### fly.io Deployment (Recommended)
 
@@ -222,15 +203,22 @@ docker run -p 8000:8000 erddap-mcp-server
 
 ## Testing Your Setup
 
-### Test Local Server
+### For Users: Verify Installation
+
+After configuring Claude Desktop, restart it and check if the ERDDAP tools appear in the tools list.
+
+### For Developers: Manual Testing
+
+#### Test Local Server
 ```bash
-# Run the server
+# Test the server directly (for debugging)
 python erddapy_mcp_server.py
 
-# Check Claude Desktop logs for connection success
+# Send test commands:
+echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | python erddapy_mcp_server.py
 ```
 
-### Test Remote Server
+#### Test Remote Server
 ```bash
 # Test basic connectivity
 curl http://localhost:8000/

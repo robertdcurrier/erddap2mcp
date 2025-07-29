@@ -36,7 +36,14 @@ async def handle_list_tools() -> list[types.Tool]:
     """List available tools."""
     debug_print("Listing erddapy tools")
     return [
-        # Dataset Discovery Tools
+        types.Tool(
+            name="list_servers",
+            description="List some well-known ERDDAP servers",
+            inputSchema={
+                "type": "object",
+                "properties": {}
+            }
+        ),
         types.Tool(
             name="search_datasets",
             description="Search for datasets on an ERDDAP server",
@@ -63,80 +70,6 @@ async def handle_list_tools() -> list[types.Tool]:
             }
         ),
         types.Tool(
-            name="get_dataset_variables",
-            description="Get all variables and their attributes for a dataset",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "dataset_id": {"type": "string", "description": "Dataset ID"},
-                    "server_url": {"type": "string", "description": "ERDDAP server URL", "default": "https://coastwatch.pfeg.noaa.gov/erddap"},
-                    "protocol": {"type": "string", "description": "Protocol type (tabledap or griddap)", "default": "tabledap"}
-                },
-                "required": ["dataset_id"]
-            }
-        ),
-        types.Tool(
-            name="get_var_by_attr",
-            description="Find variables in a dataset by their attributes",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "dataset_id": {"type": "string", "description": "Dataset ID"},
-                    "attr_name": {"type": "string", "description": "Attribute name to search for (e.g., 'standard_name')"},
-                    "attr_value": {"type": "string", "description": "Attribute value to match"},
-                    "server_url": {"type": "string", "description": "ERDDAP server URL", "default": "https://coastwatch.pfeg.noaa.gov/erddap"},
-                    "protocol": {"type": "string", "description": "Protocol type (tabledap or griddap)", "default": "tabledap"}
-                },
-                "required": ["dataset_id", "attr_name", "attr_value"]
-            }
-        ),
-        
-        # URL Generation Tools
-        types.Tool(
-            name="get_search_url",
-            description="Generate a search URL for ERDDAP datasets",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "query": {"type": "string", "description": "Search query"},
-                    "response_format": {"type": "string", "description": "Response format (csv, json, etc.)", "default": "csv"},
-                    "server_url": {"type": "string", "description": "ERDDAP server URL", "default": "https://coastwatch.pfeg.noaa.gov/erddap"}
-                },
-                "required": ["query"]
-            }
-        ),
-        types.Tool(
-            name="get_info_url",
-            description="Generate an info URL for a specific dataset",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "dataset_id": {"type": "string", "description": "Dataset ID"},
-                    "response_format": {"type": "string", "description": "Response format (csv, json, html)", "default": "csv"},
-                    "server_url": {"type": "string", "description": "ERDDAP server URL", "default": "https://coastwatch.pfeg.noaa.gov/erddap"}
-                },
-                "required": ["dataset_id"]
-            }
-        ),
-        types.Tool(
-            name="get_download_url",
-            description="Generate a download URL for dataset with specified parameters",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "dataset_id": {"type": "string", "description": "Dataset ID"},
-                    "variables": {"type": "array", "items": {"type": "string"}, "description": "Variables to download"},
-                    "constraints": {"type": "object", "description": "Constraints dict (e.g., {'time>=': '2020-01-01', 'latitude>': 30})"},
-                    "response_format": {"type": "string", "description": "Response format (csv, nc, json, etc.)", "default": "csv"},
-                    "server_url": {"type": "string", "description": "ERDDAP server URL", "default": "https://coastwatch.pfeg.noaa.gov/erddap"},
-                    "protocol": {"type": "string", "description": "Protocol type (tabledap or griddap)", "default": "tabledap"}
-                },
-                "required": ["dataset_id"]
-            }
-        ),
-        
-        # Data Access Tools
-        types.Tool(
             name="to_pandas",
             description="Download data and return as a pandas DataFrame (CSV format)",
             inputSchema={
@@ -149,32 +82,6 @@ async def handle_list_tools() -> list[types.Tool]:
                     "protocol": {"type": "string", "description": "Protocol type (tabledap or griddap)", "default": "tabledap"}
                 },
                 "required": ["dataset_id"]
-            }
-        ),
-        types.Tool(
-            name="download_file",
-            description="Download a dataset file in a specific format",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "dataset_id": {"type": "string", "description": "Dataset ID"},
-                    "variables": {"type": "array", "items": {"type": "string"}, "description": "Variables to download"},
-                    "constraints": {"type": "object", "description": "Constraints dict (e.g., {'time>=': '2020-01-01', 'latitude>': 30})"},
-                    "file_format": {"type": "string", "description": "File format (csv, nc, json, mat, etc.)", "default": "csv"},
-                    "server_url": {"type": "string", "description": "ERDDAP server URL", "default": "https://coastwatch.pfeg.noaa.gov/erddap"},
-                    "protocol": {"type": "string", "description": "Protocol type (tabledap or griddap)", "default": "tabledap"}
-                },
-                "required": ["dataset_id"]
-            }
-        ),
-        
-        # Utility Tools
-        types.Tool(
-            name="list_servers",
-            description="List some well-known ERDDAP servers",
-            inputSchema={
-                "type": "object",
-                "properties": {}
             }
         )
     ]
@@ -271,100 +178,6 @@ async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent
             except Exception as e:
                 return [types.TextContent(type="text", text=f"Error getting dataset info: {str(e)}")]
         
-        elif name == "get_dataset_variables":
-            dataset_id = arguments.get("dataset_id", "")
-            protocol = arguments.get("protocol", "tabledap")
-            e = get_or_create_erddap(server_url, protocol)
-            e.dataset_id = dataset_id
-            
-            info_url = e.get_info_url(response="csv")
-            try:
-                df = pd.read_csv(info_url)
-                variables = df[df['Row Type'] == 'variable']['Variable Name'].unique()
-                
-                result = f"**Variables in dataset {dataset_id}:**\n\n"
-                for var in variables:
-                    var_attrs = df[df['Variable Name'] == var]
-                    attrs_dict = {}
-                    for _, row in var_attrs.iterrows():
-                        if row['Attribute Name'] and pd.notna(row['Value']):
-                            attrs_dict[row['Attribute Name']] = row['Value']
-                    
-                    result += f"**{var}**\n"
-                    for attr, value in list(attrs_dict.items())[:5]:
-                        result += f"  - {attr}: {value}\n"
-                    if len(attrs_dict) > 5:
-                        result += f"  - ... and {len(attrs_dict) - 5} more attributes\n"
-                    result += "\n"
-                
-                return [types.TextContent(type="text", text=result)]
-            except Exception as e:
-                return [types.TextContent(type="text", text=f"Error getting variables: {str(e)}")]
-        
-        elif name == "get_var_by_attr":
-            dataset_id = arguments.get("dataset_id", "")
-            attr_name = arguments.get("attr_name", "")
-            attr_value = arguments.get("attr_value", "")
-            protocol = arguments.get("protocol", "tabledap")
-            
-            e = get_or_create_erddap(server_url, protocol)
-            e.dataset_id = dataset_id
-            
-            try:
-                # Use erddapy's get_var_by_attr method
-                matching_vars = e.get_var_by_attr(attr_name=attr_name, value=attr_value)
-                
-                if not matching_vars:
-                    return [types.TextContent(type="text", text=f"No variables found with {attr_name}='{attr_value}'")]
-                
-                result = f"Variables with {attr_name}='{attr_value}':\n"
-                for var in matching_vars:
-                    result += f"• {var}\n"
-                
-                return [types.TextContent(type="text", text=result)]
-            except Exception as e:
-                return [types.TextContent(type="text", text=f"Error finding variables: {str(e)}")]
-        
-        elif name == "get_search_url":
-            query = arguments.get("query", "")
-            response_format = arguments.get("response_format", "csv")
-            
-            e = get_or_create_erddap(server_url)
-            url = e.get_search_url(response=response_format, search_for=query)
-            
-            return [types.TextContent(type="text", text=f"Search URL:\n{url}")]
-        
-        elif name == "get_info_url":
-            dataset_id = arguments.get("dataset_id", "")
-            response_format = arguments.get("response_format", "csv")
-            
-            e = get_or_create_erddap(server_url)
-            e.dataset_id = dataset_id
-            url = e.get_info_url(response=response_format)
-            
-            return [types.TextContent(type="text", text=f"Info URL:\n{url}")]
-        
-        elif name == "get_download_url":
-            dataset_id = arguments.get("dataset_id", "")
-            variables = arguments.get("variables", [])
-            constraints = arguments.get("constraints", {})
-            response_format = arguments.get("response_format", "csv")
-            protocol = arguments.get("protocol", "tabledap")
-            
-            e = get_or_create_erddap(server_url, protocol)
-            e.dataset_id = dataset_id
-            e.response = response_format
-            
-            if variables:
-                e.variables = variables
-            
-            if constraints:
-                e.constraints = constraints
-            
-            url = e.get_download_url()
-            
-            return [types.TextContent(type="text", text=f"Download URL:\n{url}")]
-        
         elif name == "to_pandas":
             dataset_id = arguments.get("dataset_id", "")
             variables = arguments.get("variables", [])
@@ -402,119 +215,106 @@ async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent
             except Exception as e:
                 return [types.TextContent(type="text", text=f"Error downloading data: {str(e)}")]
         
-        elif name == "download_file":
-            dataset_id = arguments.get("dataset_id", "")
-            variables = arguments.get("variables", [])
-            constraints = arguments.get("constraints", {})
-            file_format = arguments.get("file_format", "csv")
-            protocol = arguments.get("protocol", "tabledap")
-            
-            e = get_or_create_erddap(server_url, protocol)
-            e.dataset_id = dataset_id
-            e.response = file_format
-            
-            if variables:
-                e.variables = variables
-            
-            if constraints:
-                e.constraints = constraints
-            
-            try:
-                # Get download URL
-                url = e.get_download_url()
-                
-                # For demonstration, we'll just return the URL and file info
-                result = f"**Download ready for {dataset_id}**\n\n"
-                result += f"Format: {file_format}\n"
-                if variables:
-                    result += f"Variables: {', '.join(variables)}\n"
-                if constraints:
-                    result += f"Constraints: {json.dumps(constraints, indent=2)}\n"
-                result += f"\nDownload URL:\n{url}"
-                
-                return [types.TextContent(type="text", text=result)]
-            except Exception as e:
-                return [types.TextContent(type="text", text=f"Error preparing download: {str(e)}")]
-        
         elif name == "list_servers":
             servers = [
-                ("NOAA CoastWatch", "https://coastwatch.pfeg.noaa.gov/erddap"),
-                ("IOOS ERDDAP", "https://erddap.ioos.us/erddap"),
-                ("Marine Institute Ireland", "https://erddap.marine.ie/erddap"),
-                ("ONC ERDDAP", "https://data.oceannetworks.ca/erddap"),
-                ("GCOOS ERDDAP", "https://gcoos5.geos.tamu.edu/erddap"),
-                ("EMODnet Physics", "https://erddap.emodnet-physics.eu/erddap"),
-                ("IOOS GDAC", "https://gliders.ioos.us/erddap/"),
+                {
+                    "name": "NOAA CoastWatch West Coast",
+                    "url": "https://coastwatch.pfeg.noaa.gov/erddap",
+                    "description": "Satellite and in-situ oceanographic data for the U.S. West Coast"
+                },
+                {
+                    "name": "IOOS ERDDAP",
+                    "url": "https://erddap.ioos.us/erddap",
+                    "description": "Integrated Ocean Observing System - U.S. national and regional data"
+                },
+                {
+                    "name": "Marine Institute Ireland",
+                    "url": "https://erddap.marine.ie/erddap",
+                    "description": "Irish marine data including ocean observations and models"
+                },
+                {
+                    "name": "Ocean Networks Canada",
+                    "url": "https://data.oceannetworks.ca/erddap",
+                    "description": "Real-time ocean data from Canadian observatories"
+                },
+                {
+                    "name": "EMODnet Physics",
+                    "url": "https://erddap.emodnet-physics.eu/erddap",
+                    "description": "European Marine Observation and Data Network"
+                },
+                {
+                    "name": "NOAA NCEI",
+                    "url": "https://www.ncei.noaa.gov/erddap",
+                    "description": "NOAA National Centers for Environmental Information"
+                },
+                {
+                    "name": "R.Tech Engineering",
+                    "url": "https://erddap.sensors.ioos.us/erddap",
+                    "description": "IOOS sensor data including water quality and meteorological observations"
+                },
+                {
+                    "name": "GCOOS ERDDAP", 
+                    "url": "https://gcoos5.geos.tamu.edu/erddap",
+                    "description": "Gulf of Mexico Coastal Ocean Observing System"
+                },
+                {
+                    "name": "IOOS GDAC",
+                    "url": "https://gliders.ioos.us/erddap",
+                    "description": "IOOS Glider Data Assembly Center - underwater glider observations"
+                }
             ]
             
             result = "**Well-known ERDDAP servers:**\n\n"
-            for name, url in servers:
-                result += f"• **{name}**: {url}\n"
+            for server in servers:
+                result += f"**{server['name']}**\n"
+                result += f"URL: {server['url']}\n"
+                result += f"{server['description']}\n\n"
             
             return [types.TextContent(type="text", text=result)]
         
         else:
+            debug_print(f"Unknown tool: {name}")
             return [types.TextContent(type="text", text=f"Unknown tool: {name}")]
             
     except Exception as e:
-        debug_print(f"Error in tool {name}: {e}")
+        debug_print(f"Error in tool execution: {str(e)}")
         debug_print(f"Traceback: {traceback.format_exc()}")
         return [types.TextContent(type="text", text=f"Error: {str(e)}")]
 
 async def main():
     """Main entry point for the MCP server."""
-    debug_print("Starting erddapy MCP server")
+    debug_print("Starting MCP server")
+    
+    # We need to check if we're already in an event loop
+    try:
+        # Get the current event loop
+        loop = asyncio.get_running_loop()
+        debug_print("Already in an event loop, using it")
+    except RuntimeError:
+        # No event loop running
+        loop = None
+        debug_print("No event loop running, will create one")
     
     try:
-        debug_print("Creating stdio streams")
+        debug_print("Creating stdio server")
         async with stdio_server() as (read_stream, write_stream):
-            debug_print("stdio streams created successfully")
-            
-            from mcp.server.models import InitializationOptions
-            
-            initialization_options = InitializationOptions(
-                server_name="erddapy-mcp-server",
-                server_version="1.0.0",
-                capabilities=types.ServerCapabilities(
-                    tools=types.ToolsCapability(listChanged=True)
-                )
-            )
-            
-            debug_print(f"Starting server with initialization options: {initialization_options}")
-            debug_print("Server is now running and waiting for connections...")
-            await app.run(
-                read_stream, 
-                write_stream, 
-                initialization_options
-            )
-            debug_print("Server run completed")
-            
-    except ImportError:
-        debug_print("InitializationOptions not found, trying simple dict")
-        try:
-            async with stdio_server() as (read_stream, write_stream):
-                debug_print("stdio streams created successfully")
-                
-                initialization_options = {
-                    "server_name": "erddapy-mcp-server",
-                    "server_version": "1.0.0"
-                }
-                
-                debug_print("Starting server with simple initialization options")
+            debug_print("stdio server created successfully")
+            try:
+                debug_print("Starting server.run()")
                 await app.run(
-                    read_stream, 
-                    write_stream, 
-                    initialization_options
+                    read_stream,
+                    write_stream,
+                    app.create_initialization_options()
                 )
-        except Exception as e:
-            debug_print(f"Fallback failed: {e}")
-            debug_print(f"Full traceback: {traceback.format_exc()}")
-            sys.exit(1)
-            
+                debug_print("Server run completed normally")
+            except Exception as e:
+                debug_print(f"Error during server.run(): {e}")
+                debug_print(f"Full traceback: {traceback.format_exc()}")
+                raise
     except Exception as e:
-        debug_print(f"Exception in main(): {e}")
+        debug_print(f"Error creating stdio server: {e}")
         debug_print(f"Full traceback: {traceback.format_exc()}")
-        sys.exit(1)
+        raise
 
 if __name__ == "__main__":
     debug_print("erddapy MCP server starting")

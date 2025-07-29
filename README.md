@@ -8,7 +8,7 @@ This repository provides **both local and remote MCP server implementations**:
 
 ### 📍 Local MCP Server (`erddapy_mcp_server.py`)
 - **Traditional stdio-based MCP server** for local Claude Desktop use
-- **Full-featured** with 10+ comprehensive ERDDAP tools
+- **4 comprehensive ERDDAP tools** for data discovery and access
 - **Easy setup** via claude_desktop_config.json
 - **No network dependencies** - runs completely locally
 
@@ -16,7 +16,7 @@ This repository provides **both local and remote MCP server implementations**:
 - **HTTP-based MCP server** for cloud deployment
 - **Production-ready** with fly.io deployment configuration
 - **mcp-remote proxy compatible** for Claude Desktop integration
-- **Optimized core tools** for remote performance
+- **Same 4 core tools** optimized for remote performance
 
 ## 🚨 CRITICAL: Remote MCP Connection Requirements
 
@@ -114,21 +114,7 @@ npm install -g mcp-remote
 
 ## Available Tools
 
-### Local Server Tools (Full Suite - 10+ Tools)
-| Tool | Description | Example Use |
-|------|-------------|-------------|
-| `list_servers` | Show well-known ERDDAP servers | "Show me available ERDDAP servers" |
-| `search_datasets` | Search for datasets by keyword | "Find temperature datasets on IOOS ERDDAP" |
-| `get_dataset_info` | Get detailed metadata about a dataset | "Tell me about dataset jplMURSST41" |
-| `get_dataset_variables` | List all variables in a dataset | "What variables are in this dataset?" |
-| `get_var_by_attr` | Find variables by attributes | "Find variables with units of meters" |
-| `get_search_url` | Generate a search URL | "Create a search URL for salinity data" |
-| `get_info_url` | Generate an info URL | "Generate the metadata URL for this dataset" |
-| `get_download_url` | Generate a download URL | "Create a download URL with these constraints" |
-| `to_pandas` | Download and preview data | "Show me temperature data from January 2024" |
-| `download_file` | Prepare file download | "Download this data as NetCDF" |
-
-### Remote Server Tools (Optimized Core - 4 Tools)
+### Available Tools (Both Servers)
 | Tool | Description | Example Use |
 |------|-------------|-------------|
 | `list_servers` | Show well-known ERDDAP servers worldwide | "Show me available ERDDAP servers" |
@@ -174,14 +160,14 @@ These datasets contain oceanographic measurements collected by autonomous underw
 ### Local Server
 - **Communication**: stdio (standard input/output)
 - **Deployment**: Runs on your local machine
-- **Tools**: Complete 10+ tool suite
+- **Tools**: 4 comprehensive data access tools
 - **Setup**: Single config file entry
 - **Dependencies**: Python + MCP library
 
 ### Remote Server  
 - **Communication**: HTTP with JSON-RPC 2.0
 - **Deployment**: Cloud platforms (fly.io, AWS, etc.)
-- **Tools**: Optimized 4-tool core set
+- **Tools**: Same 4 data access tools
 - **Setup**: Requires mcp-remote proxy
 - **Dependencies**: FastAPI + Docker + HTTPS
 
@@ -291,7 +277,7 @@ Both servers accept these parameters:
 
 ## Tips for Best Results
 
-1. **Start with local**: Local server has more tools and easier setup
+1. **Start with local**: Local server has easier setup and no proxy requirement
 2. **Use remote for sharing**: Remote server can be accessed by multiple users
 3. **Check metadata first**: Use `get_dataset_info` before downloading data
 4. **Use constraints**: Limit data requests to avoid timeouts

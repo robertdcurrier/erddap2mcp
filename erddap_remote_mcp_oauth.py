@@ -7,6 +7,7 @@ from fastapi import FastAPI, Request, HTTPException, Query, Depends, Header
 from fastapi.responses import StreamingResponse, RedirectResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 import json
+import os
 import asyncio
 import logging
 from typing import Dict, Any, Optional
@@ -53,6 +54,39 @@ def get_or_create_erddap(server_url: str, protocol: str = "tabledap") -> ERDDAP:
         e.protocol = protocol
         erddap_instances[key] = e
     return erddap_instances[key]
+
+def load_erddap_servers():
+    """Load ERDDAP servers from erddaps.json file."""
+    try:
+        # Get the directory where this script is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        json_path = os.path.join(script_dir, 'erddaps.json')
+        
+        with open(json_path, 'r') as f:
+            servers = json.load(f)
+        
+        logger.info(f"Loaded {len(servers)} ERDDAP servers from erddaps.json")
+        return servers
+    except FileNotFoundError:
+        logger.warning("erddaps.json not found, using fallback list")
+        # Fallback to minimal list if file not found
+        return [
+            {
+                "name": "NOAA CoastWatch West Coast",
+                "short_name": "CSWC",
+                "url": "https://coastwatch.pfeg.noaa.gov/erddap/",
+                "public": True
+            },
+            {
+                "name": "IOOS ERDDAP",
+                "short_name": "IOOS",
+                "url": "https://erddap.ioos.us/erddap/",
+                "public": True
+            }
+        ]
+    except Exception as e:
+        logger.error(f"Error loading erddaps.json: {e}")
+        return []
 
 
 class ERDDAPMCPServer:
@@ -200,20 +234,35 @@ class ERDDAPMCPServer:
             }
     
     async def _list_servers(self) -> str:
-        """List well-known ERDDAP servers"""
-        servers = [
-            ("NOAA CoastWatch", "https://coastwatch.pfeg.noaa.gov/erddap"),
-            ("IOOS ERDDAP", "https://erddap.ioos.us/erddap"),
-            ("Marine Institute Ireland", "https://erddap.marine.ie/erddap"),
-            ("ONC ERDDAP", "https://data.oceannetworks.ca/erddap"),
-            ("GCOOS ERDDAP", "https://gcoos5.geos.tamu.edu/erddap"),
-            ("EMODnet Physics", "https://erddap.emodnet-physics.eu/erddap"),
-            ("IOOS GDAC", "https://gliders.ioos.us/erddap/"),
-        ]
+        """List ERDDAP servers from erddaps.json"""
+        servers = load_erddap_servers()
         
-        result = "**Well-known ERDDAP servers:**\n\n"
-        for name, url in servers:
-            result += f"• **{name}**: {url}\n"
+        if not servers:
+            return "Error: Could not load ERDDAP servers list"
+        
+        result = f"**Available ERDDAP servers ({len(servers)} total):**\n\n"
+        
+        # Group by public/private
+        public_servers = [s for s in servers if s.get('public', True)]
+        private_servers = [s for s in servers if not s.get('public', True)]
+        
+        if public_servers:
+            result += f"**Public Servers ({len(public_servers)}):**\n\n"
+            for server in public_servers[:15]:  # Show first 15 for remote
+                result += f"• **{server['name']}**"
+                if server.get('short_name'):
+                    result += f" ({server['short_name']})"
+                result += f": {server['url']}\n"
+            
+            if len(public_servers) > 15:
+                result += f"\n... and {len(public_servers) - 15} more public servers\n"
+        
+        if private_servers:
+            result += f"\n**Private/Restricted Servers ({len(private_servers)}):**\n"
+            for server in private_servers:
+                result += f"• {server['name']}\n"
+        
+        result += "\n*Loaded from erddaps.json*"
         
         return result
     

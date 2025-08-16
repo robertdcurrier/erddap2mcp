@@ -2,6 +2,8 @@
 
 Access oceanographic and environmental data from ERDDAP servers worldwide through Claude Desktop via **two complete MCP implementations**: local stdio and remote HTTP.
 
+**🚀 Now with dynamic server loading from `erddaps.json` - 63+ ERDDAP servers available!**
+
 ## 🌊 Two Servers, All Possibilities
 
 This repository provides **both local and remote MCP server implementations**:
@@ -314,6 +316,25 @@ The `mcp-remote` proxy requirement was buried in third-party documentation. This
 - **Fisheries**: Access environmental data for fisheries management
 - **Education**: Explore real oceanographic data for teaching and learning
 
+## Server List Management
+
+**ERDDAP servers are now loaded dynamically from `erddaps.json`:**
+- 63 ERDDAP servers pre-configured (worldwide coverage)
+- Easy to add/remove servers by editing JSON file
+- Automatic fallback if file is missing
+- Servers grouped by public/private access
+- Each server entry includes name, short_name, url, and public flag
+
+To add new servers, simply edit `erddaps.json`:
+```json
+{
+  "name": "Your ERDDAP Server",
+  "short_name": "YES",
+  "url": "https://your-erddap.org/erddap/",
+  "public": true
+}
+```
+
 ## Contributing
 
 Contributions welcome! This project demonstrates how to build both local and remote MCP servers. Key areas for improvement:
@@ -321,6 +342,7 @@ Contributions welcome! This project demonstrates how to build both local and rem
 - Additional ERDDAP tools and data processing capabilities
 - Enhanced error handling and performance optimization
 - Multi-server load balancing and caching strategies
+- Adding more ERDDAP servers to erddaps.json
 
 ## License
 

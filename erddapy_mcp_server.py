@@ -4,6 +4,7 @@ import asyncio
 import sys
 import traceback
 import json
+import os
 from typing import Optional, Dict, Any, List
 from mcp.server.stdio import stdio_server
 from mcp.server import Server
@@ -15,6 +16,39 @@ import io
 def debug_print(msg):
     """Print debug info to stderr so it shows up in MCP logs."""
     print(f"DEBUG: {msg}", file=sys.stderr, flush=True)
+
+def load_erddap_servers():
+    """Load ERDDAP servers from erddaps.json file."""
+    try:
+        # Get the directory where this script is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        json_path = os.path.join(script_dir, 'erddaps.json')
+        
+        with open(json_path, 'r') as f:
+            servers = json.load(f)
+        
+        debug_print(f"Loaded {len(servers)} ERDDAP servers from erddaps.json")
+        return servers
+    except FileNotFoundError:
+        debug_print("Warning: erddaps.json not found, using fallback list")
+        # Fallback to minimal list if file not found
+        return [
+            {
+                "name": "NOAA CoastWatch West Coast",
+                "short_name": "CSWC",
+                "url": "https://coastwatch.pfeg.noaa.gov/erddap/",
+                "public": True
+            },
+            {
+                "name": "IOOS ERDDAP",
+                "short_name": "IOOS",
+                "url": "https://erddap.ioos.us/erddap/",
+                "public": True
+            }
+        ]
+    except Exception as e:
+        debug_print(f"Error loading erddaps.json: {e}")
+        return []
 
 # Global dictionary to store ERDDAP instances per server
 erddap_instances: Dict[str, ERDDAP] = {}
@@ -216,59 +250,34 @@ async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent
                 return [types.TextContent(type="text", text=f"Error downloading data: {str(e)}")]
         
         elif name == "list_servers":
-            servers = [
-                {
-                    "name": "NOAA CoastWatch West Coast",
-                    "url": "https://coastwatch.pfeg.noaa.gov/erddap",
-                    "description": "Satellite and in-situ oceanographic data for the U.S. West Coast"
-                },
-                {
-                    "name": "IOOS ERDDAP",
-                    "url": "https://erddap.ioos.us/erddap",
-                    "description": "Integrated Ocean Observing System - U.S. national and regional data"
-                },
-                {
-                    "name": "Marine Institute Ireland",
-                    "url": "https://erddap.marine.ie/erddap",
-                    "description": "Irish marine data including ocean observations and models"
-                },
-                {
-                    "name": "Ocean Networks Canada",
-                    "url": "https://data.oceannetworks.ca/erddap",
-                    "description": "Real-time ocean data from Canadian observatories"
-                },
-                {
-                    "name": "EMODnet Physics",
-                    "url": "https://erddap.emodnet-physics.eu/erddap",
-                    "description": "European Marine Observation and Data Network"
-                },
-                {
-                    "name": "NOAA NCEI",
-                    "url": "https://www.ncei.noaa.gov/erddap",
-                    "description": "NOAA National Centers for Environmental Information"
-                },
-                {
-                    "name": "R.Tech Engineering",
-                    "url": "https://erddap.sensors.ioos.us/erddap",
-                    "description": "IOOS sensor data including water quality and meteorological observations"
-                },
-                {
-                    "name": "GCOOS ERDDAP", 
-                    "url": "https://gcoos5.geos.tamu.edu/erddap",
-                    "description": "Gulf of Mexico Coastal Ocean Observing System"
-                },
-                {
-                    "name": "IOOS GDAC",
-                    "url": "https://gliders.ioos.us/erddap",
-                    "description": "IOOS Glider Data Assembly Center - underwater glider observations"
-                }
-            ]
+            servers = load_erddap_servers()
             
-            result = "**Well-known ERDDAP servers:**\n\n"
-            for server in servers:
-                result += f"**{server['name']}**\n"
-                result += f"URL: {server['url']}\n"
-                result += f"{server['description']}\n\n"
+            if not servers:
+                return [types.TextContent(type="text", text="Error: Could not load ERDDAP servers list")]
+            
+            result = f"**Available ERDDAP servers ({len(servers)} total):**\n\n"
+            
+            # Group by public/private
+            public_servers = [s for s in servers if s.get('public', True)]
+            private_servers = [s for s in servers if not s.get('public', True)]
+            
+            if public_servers:
+                result += f"**Public Servers ({len(public_servers)}):**\n\n"
+                for server in public_servers[:20]:  # Show first 20
+                    result += f"**{server['name']}**"
+                    if server.get('short_name'):
+                        result += f" ({server['short_name']})"
+                    result += f"\nURL: {server['url']}\n\n"
+                
+                if len(public_servers) > 20:
+                    result += f"... and {len(public_servers) - 20} more public servers\n\n"
+            
+            if private_servers:
+                result += f"\n**Private/Restricted Servers ({len(private_servers)}):**\n\n"
+                for server in private_servers:
+                    result += f"• {server['name']} ({server.get('short_name', 'N/A')})\n"
+            
+            result += "\n*Loaded from erddaps.json*"
             
             return [types.TextContent(type="text", text=result)]
         

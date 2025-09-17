@@ -22,7 +22,6 @@ venv.bak/
 Thumbs.db
 
 # Project specific
-*.json
 *.log
 *.csv
 *.nc

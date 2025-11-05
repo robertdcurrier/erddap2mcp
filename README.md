@@ -35,6 +35,17 @@ ERDDAP (Environmental Research Division's Data Access Program) is a data server 
 
 ## Quick Start
 
+### ⚠️ IMPORTANT: Disable VPN Before Use
+
+**ERDDAP servers may experience severe issues when accessed through
+VPNs** (NordVPN, ExpressVPN, etc.), including:
+- **404 errors** on valid datasets
+- **Truncated or incomplete data** downloads
+- **Connection timeouts** and failed requests
+
+**Solution:** Disable your VPN before using these tools. ERDDAP servers
+often block or rate-limit VPN traffic, causing unreliable behavior.
+
 ### Option 1: Local MCP Server (Recommended for Getting Started)
 
 **1. Install Dependencies:**
